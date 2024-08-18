@@ -62,6 +62,8 @@ function GameCanvas() {
     };
 
     const checkCollision = () => {
+      if (gameOver) return; // Stop further checks if the game is over
+
       // Check collision with item
       if (
         playerPosition.x < itemPosition.current.x + 30 &&
@@ -69,9 +71,10 @@ function GameCanvas() {
         playerPosition.y < itemPosition.current.y + 30 &&
         playerPosition.y + 50 > itemPosition.current.y
       ) {
-        setScore((prevScore) => prevScore + 1);
+        const newScore = score + 1;
+        setScore(newScore);
 
-        if (score + 1 >= 5) {
+        if (newScore >= 5) {
           setGameOver(true);
           setGameWon(true);
         } else {
