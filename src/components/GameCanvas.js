@@ -7,7 +7,7 @@ function GameCanvas() {
   const [itemPosition, setItemPosition] = useState({ x: 200, y: 200 });
   const [obstaclePosition, setObstaclePosition] = useState({ x: 400, y: 300 });
   const [gameOver, setGameOver] = useState(false);
-  const [keysPressed, setKeysPressed] = useState({});
+  const keysPressed = useRef({});
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -21,35 +21,33 @@ function GameCanvas() {
     playerImg.src = process.env.PUBLIC_URL + '/assets/player.png';
 
     const itemImg = new Image();
-    itemImg.src = process.env.PUBLIC_URL + '/assets/item.webp';
+    itemImg.src = process.env.PUBLIC_URL + '/assets/item.png';
 
     const obstacleImg = new Image();
     obstacleImg.src = process.env.PUBLIC_URL + '/assets/obstacle.png';
 
     const handleKeyDown = (e) => {
-      setKeysPressed((keys) => ({ ...keys, [e.key]: true }));
+      keysPressed.current[e.key] = true;
     };
 
     const handleKeyUp = (e) => {
-      setKeysPressed((keys) => ({ ...keys, [e.key]: false }));
+      keysPressed.current[e.key] = false;
     };
 
     const updatePlayerPosition = () => {
-      setPlayerPosition((pos) => {
-        let newX = pos.x;
-        let newY = pos.y;
+      let newX = playerPosition.x;
+      let newY = playerPosition.y;
 
-        if (keysPressed['ArrowUp']) newY -= playerSpeed;
-        if (keysPressed['ArrowDown']) newY += playerSpeed;
-        if (keysPressed['ArrowLeft']) newX -= playerSpeed;
-        if (keysPressed['ArrowRight']) newX += playerSpeed;
+      if (keysPressed.current['ArrowUp']) newY -= playerSpeed;
+      if (keysPressed.current['ArrowDown']) newY += playerSpeed;
+      if (keysPressed.current['ArrowLeft']) newX -= playerSpeed;
+      if (keysPressed.current['ArrowRight']) newX += playerSpeed;
 
-        // Ensure the player stays within the canvas boundaries
-        newX = Math.max(0, Math.min(newX, canvasWidth - 50));
-        newY = Math.max(0, Math.min(newY, canvasHeight - 50));
+      // Ensure the player stays within the canvas boundaries
+      newX = Math.max(0, Math.min(newX, canvasWidth - 50));
+      newY = Math.max(0, Math.min(newY, canvasHeight - 50));
 
-        return { x: newX, y: newY };
-      });
+      setPlayerPosition({ x: newX, y: newY });
     };
 
     const checkCollision = () => {
@@ -61,12 +59,15 @@ function GameCanvas() {
         playerPosition.y + 50 > itemPosition.y
       ) {
         setScore((prevScore) => prevScore + 1);
-        setItemPosition({
+
+        // Reposition item to a new random spot within the canvas bounds
+        const newItemPosition = {
           x: Math.random() * (canvasWidth - 30),
           y: Math.random() * (canvasHeight - 30),
-        });
+        };
+        setItemPosition(newItemPosition);
 
-        if (score + 1 >= 10) {
+        if (score + 1 >= 5) {
           setGameOver(true);
         }
       }
@@ -83,35 +84,39 @@ function GameCanvas() {
     };
 
     const gameLoop = () => {
-      updatePlayerPosition();
+      if (gameOver) {
+        // Display game over message
+        context.clearRect(0, 0, canvasWidth, canvasHeight);
+        context.font = '48px Arial';
+        context.fillStyle = 'red';
+        context.textAlign = 'center';
+        context.fillText('Game Over!', canvasWidth / 2, canvasHeight / 2);
+        return;
+      }
 
       context.clearRect(0, 0, canvasWidth, canvasHeight);
 
-      // Draw player
+      // Update and draw player
+      updatePlayerPosition();
       context.drawImage(playerImg, playerPosition.x, playerPosition.y, 50, 50);
 
       // Draw item
       context.drawImage(itemImg, itemPosition.x, itemPosition.y, 30, 30);
 
-      // Update obstacle position and draw obstacle
-      setObstaclePosition((pos) => {
-        let newX = pos.x - obstacleSpeed;
-        if (newX < -50) newX = canvasWidth; // Reset position if off-screen
-        return { ...pos, x: newX };
-      });
+      // Update obstacle position
+      const newObstacleX = obstaclePosition.x - obstacleSpeed;
+      if (newObstacleX < -50) {
+        setObstaclePosition({ x: canvasWidth, y: obstaclePosition.y });
+      } else {
+        setObstaclePosition((prevPos) => ({ ...prevPos, x: newObstacleX }));
+      }
+
+      // Draw obstacle
       context.drawImage(obstacleImg, obstaclePosition.x, obstaclePosition.y, 50, 50);
 
       checkCollision();
 
-      if (!gameOver) {
-        requestAnimationFrame(gameLoop);
-      } else {
-        // Display game over message
-        context.font = '48px Arial';
-        context.fillStyle = 'red';
-        context.textAlign = 'center';
-        context.fillText('Game Over!', canvasWidth / 2, canvasHeight / 2);
-      }
+      requestAnimationFrame(gameLoop);
     };
 
     playerImg.onload = () => {
@@ -124,7 +129,7 @@ function GameCanvas() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [playerPosition, itemPosition, obstaclePosition, score, gameOver, keysPressed]);
+  }, [playerPosition, itemPosition, obstaclePosition, score, gameOver]);
 
   return (
     <div>
