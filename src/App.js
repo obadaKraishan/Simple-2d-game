@@ -5,6 +5,7 @@ import Level3 from './components/Level3';
 
 function App() {
   const [level, setLevel] = useState(1);
+  const [lives, setLives] = useState(3); // Initialize lives
   const [gameFinished, setGameFinished] = useState(false);
 
   const handleNextLevel = () => {
@@ -26,9 +27,9 @@ function App() {
         </div>
       ) : (
         <>
-          {level === 1 && <Level1 onNextLevel={handleNextLevel} />}
-          {level === 2 && <Level2 onNextLevel={handleNextLevel} />}
-          {level === 3 && <Level3 onNextLevel={handleNextLevel} />}
+          {level === 1 && <Level1 onNextLevel={handleNextLevel} lives={lives} setLives={setLives} />}
+          {level === 2 && <Level2 onNextLevel={handleNextLevel} lives={lives} setLives={setLives} />}
+          {level === 3 && <Level3 onNextLevel={handleNextLevel} lives={lives} setLives={setLives} />}
         </>
       )}
     </div>

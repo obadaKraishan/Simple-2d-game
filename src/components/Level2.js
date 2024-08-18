@@ -1,8 +1,7 @@
-// Level2.js
 import React from 'react';
 import GameCanvas from './GameCanvas';
 
-function Level2({ onNextLevel }) {
+function Level2({ onNextLevel, lives, setLives }) {
   const obstacles = [
     { x: 300, y: 100 },
     { x: 500, y: 200 },
@@ -12,7 +11,14 @@ function Level2({ onNextLevel }) {
   const policeSpeed = 1.5; // Faster speed for Level 2
 
   return (
-    <GameCanvas obstacles={obstacles} policeSpeed={policeSpeed} itemTarget={10} onNextLevel={onNextLevel} />
+    <GameCanvas 
+      obstacles={obstacles} 
+      policeSpeed={policeSpeed} 
+      itemTarget={10} 
+      onNextLevel={onNextLevel} 
+      lives={lives} 
+      setLives={setLives} 
+    />
   );
 }
 

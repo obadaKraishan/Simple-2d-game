@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
+function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, setLives }) {
   const canvasRef = useRef(null);
   const [score, setScore] = useState(0);
   const [playerPosition, setPlayerPosition] = useState({ x: 50, y: 50 });
@@ -87,6 +87,7 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
       const now = Date.now();
       if (now - lastCollision.current < 300) return;
 
+      // Check collision with item
       if (
         playerPosition.x < itemPosition.current.x + 30 &&
         playerPosition.x + 50 > itemPosition.current.x &&
@@ -107,6 +108,7 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
         lastCollision.current = now;
       }
 
+      // Check collision with obstacles
       obstacles.forEach((obstacle) => {
         if (
           playerPosition.x < obstacle.x + 50 &&
@@ -119,6 +121,7 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
         }
       });
 
+      // Check collision with police
       if (
         playerPosition.x < policePosition.x + 50 &&
         playerPosition.x + 50 > policePosition.x &&
@@ -131,7 +134,7 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
     };
 
     const gameLoop = () => {
-      if (gameOver) return;
+      if (gameOver) return; // Stop the loop when the game is over
 
       context.clearRect(0, 0, canvasWidth, canvasHeight);
 
@@ -164,9 +167,22 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
     };
   }, [playerPosition, policePosition, score, gameOver, gameWon]);
 
+  useEffect(() => {
+    if (gameOver && !gameWon) {
+      if (lives > 1) {
+        setLives(lives - 1);
+        window.location.reload(); // Restart current level
+      } else {
+        setLives(3);
+        setGameOver(true);
+      }
+    }
+  }, [gameOver, gameWon, lives, setLives]);
+
   return (
     <div>
       <h2>Score: {score}</h2>
+      <h3>Lives: {lives}</h3>
       <canvas ref={canvasRef} width={800} height={600} />
       {gameOver && (
         <div className="popup">
