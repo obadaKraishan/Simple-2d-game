@@ -7,7 +7,7 @@ function GameCanvas() {
   const [itemPosition, setItemPosition] = useState({ x: 200, y: 200 });
   const [obstaclePosition, setObstaclePosition] = useState({ x: 400, y: 300 });
   const [gameOver, setGameOver] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
+  const [gameWon, setGameWon] = useState(false);
   const keysPressed = useRef({});
 
   useEffect(() => {
@@ -51,6 +51,14 @@ function GameCanvas() {
       setPlayerPosition({ x: newX, y: newY });
     };
 
+    const repositionItem = () => {
+      const newItemPosition = {
+        x: Math.random() * (canvasWidth - 60) + 15,
+        y: Math.random() * (canvasHeight - 60) + 15,
+      };
+      setItemPosition(newItemPosition);
+    };
+
     const checkCollision = () => {
       // Check collision with item
       if (
@@ -61,16 +69,11 @@ function GameCanvas() {
       ) {
         setScore((prevScore) => prevScore + 1);
 
-        // Reposition item to a new random spot within the canvas bounds
-        const newItemPosition = {
-          x: Math.random() * (canvasWidth - 60) + 15,
-          y: Math.random() * (canvasHeight - 60) + 15,
-        };
-        setItemPosition(newItemPosition);
-
         if (score + 1 >= 5) {
           setGameOver(true);
-          setShowPopup(true);
+          setGameWon(true);
+        } else {
+          repositionItem(); // Reposition the item only if the game is not won
         }
       }
 
@@ -82,7 +85,7 @@ function GameCanvas() {
         playerPosition.y + 50 > obstaclePosition.y
       ) {
         setGameOver(true);
-        setShowPopup(true);
+        setGameWon(false);
       }
     };
 
@@ -129,9 +132,9 @@ function GameCanvas() {
     <div>
       <h2>Score: {score}</h2>
       <canvas ref={canvasRef} width={800} height={600} />
-      {showPopup && (
+      {gameOver && (
         <div className="popup">
-          <h2>Game Over!</h2>
+          <h2>{gameWon ? 'You Won!' : 'Game Over!'}</h2>
           <p>Your score is: {score}</p>
           <button onClick={() => window.location.reload()}>Play Again</button>
         </div>
