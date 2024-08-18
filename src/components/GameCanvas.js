@@ -5,10 +5,13 @@ function GameCanvas() {
   const [score, setScore] = useState(0);
   const [playerPosition, setPlayerPosition] = useState({ x: 50, y: 50 });
   const [itemPosition, setItemPosition] = useState({ x: 200, y: 200 });
+  const [gameOver, setGameOver] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
 
     const playerImg = new Image();
     playerImg.src = process.env.PUBLIC_URL + '/assets/player.png';
@@ -17,10 +20,23 @@ function GameCanvas() {
     itemImg.src = process.env.PUBLIC_URL + '/assets/item.webp';
 
     const handleKeyDown = (e) => {
-      if (e.key === 'ArrowUp') setPlayerPosition((pos) => ({ ...pos, y: pos.y - 10 }));
-      if (e.key === 'ArrowDown') setPlayerPosition((pos) => ({ ...pos, y: pos.y + 10 }));
-      if (e.key === 'ArrowLeft') setPlayerPosition((pos) => ({ ...pos, x: pos.x - 10 }));
-      if (e.key === 'ArrowRight') setPlayerPosition((pos) => ({ ...pos, x: pos.x + 10 }));
+      if (gameOver) return;
+
+      setPlayerPosition((pos) => {
+        let newX = pos.x;
+        let newY = pos.y;
+
+        if (e.key === 'ArrowUp') newY -= 10;
+        if (e.key === 'ArrowDown') newY += 10;
+        if (e.key === 'ArrowLeft') newX -= 10;
+        if (e.key === 'ArrowRight') newX += 10;
+
+        // Ensure the player stays within the canvas boundaries
+        newX = Math.max(0, Math.min(newX, canvasWidth - 50));
+        newY = Math.max(0, Math.min(newY, canvasHeight - 50));
+
+        return { x: newX, y: newY };
+      });
     };
 
     const checkCollision = () => {
@@ -30,20 +46,36 @@ function GameCanvas() {
         playerPosition.y < itemPosition.y + 30 &&
         playerPosition.y + 50 > itemPosition.y
       ) {
-        setScore(score + 1);
-        setItemPosition({ x: Math.random() * 750, y: Math.random() * 550 });
+        setScore((prevScore) => prevScore + 1);
+
+        // Reposition the item randomly within the canvas
+        setItemPosition({
+          x: Math.random() * (canvasWidth - 30),
+          y: Math.random() * (canvasHeight - 30),
+        });
+
+        if (score + 1 >= 10) {
+          setGameOver(true);
+        }
       }
     };
 
     const gameLoop = () => {
-      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.clearRect(0, 0, canvasWidth, canvasHeight);
 
       context.drawImage(playerImg, playerPosition.x, playerPosition.y, 50, 50);
       context.drawImage(itemImg, itemPosition.x, itemPosition.y, 30, 30);
 
-      checkCollision();
-
-      requestAnimationFrame(gameLoop);
+      if (!gameOver) {
+        checkCollision();
+        requestAnimationFrame(gameLoop);
+      } else {
+        // Display game over message
+        context.font = '48px Arial';
+        context.fillStyle = 'red';
+        context.textAlign = 'center';
+        context.fillText('Game Over!', canvasWidth / 2, canvasHeight / 2);
+      }
     };
 
     playerImg.onload = () => {
@@ -54,7 +86,7 @@ function GameCanvas() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [playerPosition, itemPosition, score]);
+  }, [playerPosition, itemPosition, score, gameOver]);
 
   return (
     <div>
