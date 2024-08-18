@@ -6,7 +6,7 @@ import Level3 from './components/Level3';
 function App() {
   const [level, setLevel] = useState(1);
 
-  const nextLevel = () => {
+  const handleNextLevel = () => {
     if (level < 3) {
       setLevel(level + 1);
     } else {
@@ -17,10 +17,9 @@ function App() {
   return (
     <div className="App">
       <h1>2D Game</h1>
-      {level === 1 && <Level1 />}
-      {level === 2 && <Level2 />}
-      {level === 3 && <Level3 />}
-      <button onClick={nextLevel}>Next Level</button>
+      {level === 1 && <Level1 onNextLevel={handleNextLevel} />}
+      {level === 2 && <Level2 onNextLevel={handleNextLevel} />}
+      {level === 3 && <Level3 onNextLevel={handleNextLevel} />}
     </div>
   );
 }

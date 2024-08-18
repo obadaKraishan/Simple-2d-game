@@ -1,15 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-function GameCanvas() {
+function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
   const canvasRef = useRef(null);
   const [score, setScore] = useState(0);
   const [playerPosition, setPlayerPosition] = useState({ x: 50, y: 50 });
+  const [policePosition, setPolicePosition] = useState({ x: 700, y: 500 }); // Start police far from the player
   const itemPosition = useRef({ x: 200, y: 200 });
-  const obstacles = useRef([
-    { x: 300, y: 100 },
-    { x: 500, y: 200 },
-    { x: 700, y: 300 },
-  ]);
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
   const keysPressed = useRef({});
@@ -29,6 +25,9 @@ function GameCanvas() {
 
     const obstacleImg = new Image();
     obstacleImg.src = process.env.PUBLIC_URL + '/assets/obstacle.png';
+
+    const policeImg = new Image();
+    policeImg.src = process.env.PUBLIC_URL + '/assets/police.png';
 
     const handleKeyDown = (e) => {
       keysPressed.current[e.key] = true;
@@ -54,6 +53,18 @@ function GameCanvas() {
       setPlayerPosition({ x: newX, y: newY });
     };
 
+    const updatePolicePosition = () => {
+      let newX = policePosition.x;
+      let newY = policePosition.y;
+
+      if (playerPosition.x > newX) newX += policeSpeed;
+      if (playerPosition.x < newX) newX -= policeSpeed;
+      if (playerPosition.y > newY) newY += policeSpeed;
+      if (playerPosition.y < newY) newY -= policeSpeed;
+
+      setPolicePosition({ x: newX, y: newY });
+    };
+
     const repositionItem = () => {
       itemPosition.current = {
         x: Math.random() * (canvasWidth - 60) + 15,
@@ -62,8 +73,6 @@ function GameCanvas() {
     };
 
     const checkCollision = () => {
-      if (gameOver) return; // Stop further checks if the game is over
-
       // Check collision with item
       if (
         playerPosition.x < itemPosition.current.x + 30 &&
@@ -74,16 +83,16 @@ function GameCanvas() {
         const newScore = score + 1;
         setScore(newScore);
 
-        if (newScore >= 5) {
+        if (newScore >= itemTarget) {
           setGameOver(true);
           setGameWon(true);
         } else {
-          repositionItem(); // Reposition the item only if the game is not won
+          repositionItem();
         }
       }
 
       // Check collision with obstacles
-      obstacles.current.forEach((obstacle) => {
+      obstacles.forEach((obstacle) => {
         if (
           playerPosition.x < obstacle.x + 50 &&
           playerPosition.x + 50 > obstacle.x &&
@@ -94,6 +103,17 @@ function GameCanvas() {
           setGameWon(false);
         }
       });
+
+      // Check collision with police
+      if (
+        playerPosition.x < policePosition.x + 50 &&
+        playerPosition.x + 50 > policePosition.x &&
+        playerPosition.y < policePosition.y + 50 &&
+        playerPosition.y + 50 > policePosition.y
+      ) {
+        setGameOver(true);
+        setGameWon(false);
+      }
     };
 
     const gameLoop = () => {
@@ -105,11 +125,15 @@ function GameCanvas() {
       updatePlayerPosition();
       context.drawImage(playerImg, playerPosition.x, playerPosition.y, 50, 50);
 
+      // Update and draw police
+      updatePolicePosition();
+      context.drawImage(policeImg, policePosition.x, policePosition.y, 50, 50);
+
       // Draw item
       context.drawImage(itemImg, itemPosition.current.x, itemPosition.current.y, 30, 30);
 
-      // Draw obstacles (now stationary)
-      obstacles.current.forEach((obstacle) => {
+      // Draw obstacles
+      obstacles.forEach((obstacle) => {
         context.drawImage(obstacleImg, obstacle.x, obstacle.y, 50, 50);
       });
 
@@ -128,7 +152,7 @@ function GameCanvas() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [playerPosition, score, gameOver]);
+  }, [playerPosition, policePosition, score, gameOver, gameWon]);
 
   return (
     <div>
@@ -138,7 +162,11 @@ function GameCanvas() {
         <div className="popup">
           <h2>{gameWon ? 'You Won!' : 'Game Over!'}</h2>
           <p>Your score is: {score}</p>
-          <button onClick={() => window.location.reload()}>Play Again</button>
+          {gameWon ? (
+            <button onClick={onNextLevel}>Next Level</button>
+          ) : (
+            <button onClick={() => window.location.reload()}>Retry</button>
+          )}
         </div>
       )}
     </div>
