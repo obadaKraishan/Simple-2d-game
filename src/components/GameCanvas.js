@@ -7,6 +7,7 @@ function GameCanvas() {
   const [itemPosition, setItemPosition] = useState({ x: 200, y: 200 });
   const [obstaclePosition, setObstaclePosition] = useState({ x: 400, y: 300 });
   const [gameOver, setGameOver] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
   const keysPressed = useRef({});
 
   useEffect(() => {
@@ -62,13 +63,14 @@ function GameCanvas() {
 
         // Reposition item to a new random spot within the canvas bounds
         const newItemPosition = {
-          x: Math.random() * (canvasWidth - 30),
-          y: Math.random() * (canvasHeight - 30),
+          x: Math.random() * (canvasWidth - 60) + 15,
+          y: Math.random() * (canvasHeight - 60) + 15,
         };
         setItemPosition(newItemPosition);
 
         if (score + 1 >= 5) {
           setGameOver(true);
+          setShowPopup(true);
         }
       }
 
@@ -80,19 +82,12 @@ function GameCanvas() {
         playerPosition.y + 50 > obstaclePosition.y
       ) {
         setGameOver(true);
+        setShowPopup(true);
       }
     };
 
     const gameLoop = () => {
-      if (gameOver) {
-        // Display game over message
-        context.clearRect(0, 0, canvasWidth, canvasHeight);
-        context.font = '48px Arial';
-        context.fillStyle = 'red';
-        context.textAlign = 'center';
-        context.fillText('Game Over!', canvasWidth / 2, canvasHeight / 2);
-        return;
-      }
+      if (gameOver) return;
 
       context.clearRect(0, 0, canvasWidth, canvasHeight);
 
@@ -104,12 +99,11 @@ function GameCanvas() {
       context.drawImage(itemImg, itemPosition.x, itemPosition.y, 30, 30);
 
       // Update obstacle position
-      const newObstacleX = obstaclePosition.x - obstacleSpeed;
+      let newObstacleX = obstaclePosition.x - obstacleSpeed;
       if (newObstacleX < -50) {
-        setObstaclePosition({ x: canvasWidth, y: obstaclePosition.y });
-      } else {
-        setObstaclePosition((prevPos) => ({ ...prevPos, x: newObstacleX }));
+        newObstacleX = canvasWidth;
       }
+      setObstaclePosition((prevPos) => ({ ...prevPos, x: newObstacleX }));
 
       // Draw obstacle
       context.drawImage(obstacleImg, obstaclePosition.x, obstaclePosition.y, 50, 50);
@@ -135,6 +129,13 @@ function GameCanvas() {
     <div>
       <h2>Score: {score}</h2>
       <canvas ref={canvasRef} width={800} height={600} />
+      {showPopup && (
+        <div className="popup">
+          <h2>Game Over!</h2>
+          <p>Your score is: {score}</p>
+          <button onClick={() => window.location.reload()}>Play Again</button>
+        </div>
+      )}
     </div>
   );
 }
