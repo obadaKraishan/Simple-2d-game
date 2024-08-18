@@ -3,22 +3,30 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #282c34;
+    background-color: white;
     padding: 20px;
-    border: 2px solid white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    z-index: 10;
     text-align: center;
-    color: white;
   }
   
   .popup h2 {
-    margin-bottom: 10px;
+    margin-bottom: 20px;
   }
   
   .popup button {
     padding: 10px 20px;
-    background: white;
-    color: #282c34;
+    background-color: #4CAF50;
+    color: white;
     border: none;
     cursor: pointer;
+  }
+  
+  .popup button:hover {
+    background-color: #45a049;
+  }
+  
+  .popup p {
+    margin-bottom: 20px;
   }
   

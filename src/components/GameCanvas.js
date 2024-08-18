@@ -57,10 +57,11 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
       let newX = policePosition.x;
       let newY = policePosition.y;
 
-      if (playerPosition.x > newX) newX += policeSpeed;
-      if (playerPosition.x < newX) newX -= policeSpeed;
-      if (playerPosition.y > newY) newY += policeSpeed;
-      if (playerPosition.y < newY) newY -= policeSpeed;
+      // Move police towards the player slowly by a smaller increment
+      if (playerPosition.x > newX) newX += policeSpeed * 0.2; // Adjusted speed multiplier
+      if (playerPosition.x < newX) newX -= policeSpeed * 0.2;
+      if (playerPosition.y > newY) newY += policeSpeed * 0.2;
+      if (playerPosition.y < newY) newY -= policeSpeed * 0.2;
 
       setPolicePosition({ x: newX, y: newY });
     };
@@ -73,6 +74,8 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
     };
 
     const checkCollision = () => {
+      if (gameOver) return;
+
       // Check collision with item
       if (
         playerPosition.x < itemPosition.current.x + 30 &&
