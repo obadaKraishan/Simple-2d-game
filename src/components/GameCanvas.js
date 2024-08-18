@@ -5,7 +5,11 @@ function GameCanvas() {
   const [score, setScore] = useState(0);
   const [playerPosition, setPlayerPosition] = useState({ x: 50, y: 50 });
   const itemPosition = useRef({ x: 200, y: 200 });
-  const obstaclePosition = useRef({ x: 800, y: 300 });
+  const obstacles = useRef([
+    { x: 300, y: 100 },
+    { x: 500, y: 200 },
+    { x: 700, y: 300 },
+  ]);
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
   const keysPressed = useRef({});
@@ -16,7 +20,6 @@ function GameCanvas() {
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
     const playerSpeed = 3;
-    const obstacleSpeed = 2;
 
     const playerImg = new Image();
     playerImg.src = process.env.PUBLIC_URL + '/assets/player.png';
@@ -76,16 +79,18 @@ function GameCanvas() {
         }
       }
 
-      // Check collision with obstacle
-      if (
-        playerPosition.x < obstaclePosition.current.x + 50 &&
-        playerPosition.x + 50 > obstaclePosition.current.x &&
-        playerPosition.y < obstaclePosition.current.y + 50 &&
-        playerPosition.y + 50 > obstaclePosition.current.y
-      ) {
-        setGameOver(true);
-        setGameWon(false);
-      }
+      // Check collision with obstacles
+      obstacles.current.forEach((obstacle) => {
+        if (
+          playerPosition.x < obstacle.x + 50 &&
+          playerPosition.x + 50 > obstacle.x &&
+          playerPosition.y < obstacle.y + 50 &&
+          playerPosition.y + 50 > obstacle.y
+        ) {
+          setGameOver(true);
+          setGameWon(false);
+        }
+      });
     };
 
     const gameLoop = () => {
@@ -100,12 +105,10 @@ function GameCanvas() {
       // Draw item
       context.drawImage(itemImg, itemPosition.current.x, itemPosition.current.y, 30, 30);
 
-      // Update and draw obstacle
-      obstaclePosition.current.x -= obstacleSpeed;
-      if (obstaclePosition.current.x < -50) {
-        obstaclePosition.current.x = canvasWidth;
-      }
-      context.drawImage(obstacleImg, obstaclePosition.current.x, obstaclePosition.current.y, 50, 50);
+      // Draw obstacles (now stationary)
+      obstacles.current.forEach((obstacle) => {
+        context.drawImage(obstacleImg, obstacle.x, obstacle.y, 50, 50);
+      });
 
       checkCollision();
 
