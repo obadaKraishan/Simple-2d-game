@@ -4,11 +4,12 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
   const canvasRef = useRef(null);
   const [score, setScore] = useState(0);
   const [playerPosition, setPlayerPosition] = useState({ x: 50, y: 50 });
-  const [policePosition, setPolicePosition] = useState({ x: 700, y: 500 }); // Start police far from the player
+  const [policePosition, setPolicePosition] = useState({ x: 700, y: 500 });
   const itemPosition = useRef({ x: 200, y: 200 });
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
   const keysPressed = useRef({});
+  const lastCollision = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -46,7 +47,6 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
       if (keysPressed.current['ArrowLeft']) newX -= playerSpeed;
       if (keysPressed.current['ArrowRight']) newX += playerSpeed;
 
-      // Ensure the player stays within the canvas boundaries
       newX = Math.max(0, Math.min(newX, canvasWidth - 50));
       newY = Math.max(0, Math.min(newY, canvasHeight - 50));
 
@@ -57,8 +57,7 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
       let newX = policePosition.x;
       let newY = policePosition.y;
 
-      // Move police towards the player slowly by a smaller increment
-      if (playerPosition.x > newX) newX += policeSpeed * 0.2; // Adjusted speed multiplier
+      if (playerPosition.x > newX) newX += policeSpeed * 0.2;
       if (playerPosition.x < newX) newX -= policeSpeed * 0.2;
       if (playerPosition.y > newY) newY += policeSpeed * 0.2;
       if (playerPosition.y < newY) newY -= policeSpeed * 0.2;
@@ -67,34 +66,47 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
     };
 
     const repositionItem = () => {
-      itemPosition.current = {
-        x: Math.random() * (canvasWidth - 60) + 15,
-        y: Math.random() * (canvasHeight - 60) + 15,
-      };
+      let newItemPosition;
+      do {
+        newItemPosition = {
+          x: Math.random() * (canvasWidth - 60) + 15,
+          y: Math.random() * (canvasHeight - 60) + 15,
+        };
+      } while (obstacles.some(obstacle => (
+        newItemPosition.x < obstacle.x + 50 &&
+        newItemPosition.x + 30 > obstacle.x &&
+        newItemPosition.y < obstacle.y + 50 &&
+        newItemPosition.y + 30 > obstacle.y
+      )));
+      itemPosition.current = newItemPosition;
     };
 
     const checkCollision = () => {
       if (gameOver) return;
 
-      // Check collision with item
+      const now = Date.now();
+      if (now - lastCollision.current < 300) return;
+
       if (
         playerPosition.x < itemPosition.current.x + 30 &&
         playerPosition.x + 50 > itemPosition.current.x &&
         playerPosition.y < itemPosition.current.y + 30 &&
         playerPosition.y + 50 > itemPosition.current.y
       ) {
-        const newScore = score + 1;
-        setScore(newScore);
+        setScore((prevScore) => {
+          const newScore = prevScore + 1;
+          if (newScore >= itemTarget) {
+            setGameOver(true);
+            setGameWon(true);
+          } else {
+            repositionItem();
+          }
+          return newScore;
+        });
 
-        if (newScore >= itemTarget) {
-          setGameOver(true);
-          setGameWon(true);
-        } else {
-          repositionItem();
-        }
+        lastCollision.current = now;
       }
 
-      // Check collision with obstacles
       obstacles.forEach((obstacle) => {
         if (
           playerPosition.x < obstacle.x + 50 &&
@@ -107,7 +119,6 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
         }
       });
 
-      // Check collision with police
       if (
         playerPosition.x < policePosition.x + 50 &&
         playerPosition.x + 50 > policePosition.x &&
@@ -124,18 +135,14 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel }) {
 
       context.clearRect(0, 0, canvasWidth, canvasHeight);
 
-      // Update and draw player
       updatePlayerPosition();
       context.drawImage(playerImg, playerPosition.x, playerPosition.y, 50, 50);
 
-      // Update and draw police
       updatePolicePosition();
       context.drawImage(policeImg, policePosition.x, policePosition.y, 50, 50);
 
-      // Draw item
       context.drawImage(itemImg, itemPosition.current.x, itemPosition.current.y, 30, 30);
 
-      // Draw obstacles
       obstacles.forEach((obstacle) => {
         context.drawImage(obstacleImg, obstacle.x, obstacle.y, 50, 50);
       });

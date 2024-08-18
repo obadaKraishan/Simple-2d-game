@@ -11,7 +11,7 @@ function App() {
     if (level < 3) {
       setLevel(level + 1);
     } else {
-      setGameFinished(true); // Show a message at the end of the game
+      setGameFinished(true);
     }
   };
 
