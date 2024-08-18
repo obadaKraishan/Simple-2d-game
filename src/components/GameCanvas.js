@@ -4,8 +4,8 @@ function GameCanvas() {
   const canvasRef = useRef(null);
   const [score, setScore] = useState(0);
   const [playerPosition, setPlayerPosition] = useState({ x: 50, y: 50 });
-  const [itemPosition, setItemPosition] = useState({ x: 200, y: 200 });
-  const [obstaclePosition, setObstaclePosition] = useState({ x: 400, y: 300 });
+  const itemPosition = useRef({ x: 200, y: 200 });
+  const obstaclePosition = useRef({ x: 800, y: 300 });
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
   const keysPressed = useRef({});
@@ -52,20 +52,19 @@ function GameCanvas() {
     };
 
     const repositionItem = () => {
-      const newItemPosition = {
+      itemPosition.current = {
         x: Math.random() * (canvasWidth - 60) + 15,
         y: Math.random() * (canvasHeight - 60) + 15,
       };
-      setItemPosition(newItemPosition);
     };
 
     const checkCollision = () => {
       // Check collision with item
       if (
-        playerPosition.x < itemPosition.x + 30 &&
-        playerPosition.x + 50 > itemPosition.x &&
-        playerPosition.y < itemPosition.y + 30 &&
-        playerPosition.y + 50 > itemPosition.y
+        playerPosition.x < itemPosition.current.x + 30 &&
+        playerPosition.x + 50 > itemPosition.current.x &&
+        playerPosition.y < itemPosition.current.y + 30 &&
+        playerPosition.y + 50 > itemPosition.current.y
       ) {
         setScore((prevScore) => prevScore + 1);
 
@@ -79,10 +78,10 @@ function GameCanvas() {
 
       // Check collision with obstacle
       if (
-        playerPosition.x < obstaclePosition.x + 50 &&
-        playerPosition.x + 50 > obstaclePosition.x &&
-        playerPosition.y < obstaclePosition.y + 50 &&
-        playerPosition.y + 50 > obstaclePosition.y
+        playerPosition.x < obstaclePosition.current.x + 50 &&
+        playerPosition.x + 50 > obstaclePosition.current.x &&
+        playerPosition.y < obstaclePosition.current.y + 50 &&
+        playerPosition.y + 50 > obstaclePosition.current.y
       ) {
         setGameOver(true);
         setGameWon(false);
@@ -99,17 +98,14 @@ function GameCanvas() {
       context.drawImage(playerImg, playerPosition.x, playerPosition.y, 50, 50);
 
       // Draw item
-      context.drawImage(itemImg, itemPosition.x, itemPosition.y, 30, 30);
+      context.drawImage(itemImg, itemPosition.current.x, itemPosition.current.y, 30, 30);
 
-      // Update obstacle position
-      let newObstacleX = obstaclePosition.x - obstacleSpeed;
-      if (newObstacleX < -50) {
-        newObstacleX = canvasWidth;
+      // Update and draw obstacle
+      obstaclePosition.current.x -= obstacleSpeed;
+      if (obstaclePosition.current.x < -50) {
+        obstaclePosition.current.x = canvasWidth;
       }
-      setObstaclePosition((prevPos) => ({ ...prevPos, x: newObstacleX }));
-
-      // Draw obstacle
-      context.drawImage(obstacleImg, obstaclePosition.x, obstaclePosition.y, 50, 50);
+      context.drawImage(obstacleImg, obstaclePosition.current.x, obstaclePosition.current.y, 50, 50);
 
       checkCollision();
 
@@ -126,7 +122,7 @@ function GameCanvas() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [playerPosition, itemPosition, obstaclePosition, score, gameOver]);
+  }, [playerPosition, score, gameOver]);
 
   return (
     <div>
