@@ -1,7 +1,4 @@
-// src/components/GameCanvas.js
 import React, { useRef, useEffect, useState } from 'react';
-import Player from './Player';
-import Item from './Item';
 
 function GameCanvas() {
   const canvasRef = useRef(null);
@@ -14,10 +11,10 @@ function GameCanvas() {
     const context = canvas.getContext('2d');
 
     const playerImg = new Image();
-    playerImg.src = '/player.png';
+    playerImg.src = process.env.PUBLIC_URL + '/assets/player.png';
 
     const itemImg = new Image();
-    itemImg.src = '/item.png';
+    itemImg.src = process.env.PUBLIC_URL + '/assets/item.webp';
 
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowUp') setPlayerPosition((pos) => ({ ...pos, y: pos.y - 10 }));
