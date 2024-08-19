@@ -12,7 +12,6 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, se
   const lastCollision = useRef(0);
 
   const repositionItem = () => {
-    if (gameWon) return;  // Prevent repositioning if the game is won
     let newItemPosition;
     const canvasWidth = canvasRef.current.width;
     const canvasHeight = canvasRef.current.height;
@@ -56,6 +55,8 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, se
     };
 
     const updatePlayerPosition = () => {
+      if (gameOver || gameWon) return; // Stop updating position if game is over or won
+
       let newX = playerPosition.x;
       let newY = playerPosition.y;
 
@@ -71,6 +72,8 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, se
     };
 
     const updatePolicePosition = () => {
+      if (gameOver || gameWon) return; // Stop updating police position if game is over or won
+
       let newX = policePosition.x;
       let newY = policePosition.y;
 
@@ -83,31 +86,33 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, se
     };
 
     const checkCollision = () => {
-      if (gameOver || gameWon) return;  // Prevent collision checks if game is over or won
+      if (gameOver || gameWon) return; // Stop checking collisions if game is over or won
 
       const now = Date.now();
       if (now - lastCollision.current < 300) return;
 
+      // Check collision with item
       if (
         playerPosition.x < itemPosition.current.x + 30 &&
         playerPosition.x + 50 > itemPosition.current.x &&
         playerPosition.y < itemPosition.current.y + 30 &&
         playerPosition.y + 50 > itemPosition.current.y
       ) {
+        lastCollision.current = now;
+
         setScore((prevScore) => {
           const newScore = prevScore + 1;
           if (newScore >= itemTarget) {
-            setGameOver(true);
             setGameWon(true);
+            setGameOver(true); // Mark the game as over when won
           } else {
             repositionItem();
           }
           return newScore;
         });
-
-        lastCollision.current = now;
       }
 
+      // Check collision with obstacles
       obstacles.forEach((obstacle) => {
         if (
           playerPosition.x < obstacle.x + 50 &&
@@ -120,6 +125,7 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, se
         }
       });
 
+      // Check collision with police
       if (
         playerPosition.x < policePosition.x + 50 &&
         playerPosition.x + 50 > policePosition.x &&
@@ -135,14 +141,14 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, se
 
     const gameLoop = (time) => {
       const deltaTime = time - lastTime;
-      if (deltaTime < 1000 / 20) { // 20 FPS cap for further reduction
+      if (deltaTime < 1000 / 10) { // 10 FPS cap for minimal resource usage
         requestAnimationFrame(gameLoop);
         return;
       }
 
       lastTime = time;
 
-      if (gameOver) return;
+      if (gameOver || gameWon) return; // Stop game loop if game is over or won
 
       context.clearRect(0, 0, canvas.width, canvas.height);
 
