@@ -1,8 +1,19 @@
-// src/components/Player.js
 import React from 'react';
 
-function Player({ x, y }) {
-  return <div style={{ position: 'absolute', left: x, top: y, width: 50, height: 50 }} />;
+function Player({ playerPosition }) {
+  return (
+    <img
+      src={process.env.PUBLIC_URL + '/assets/player.png'}
+      alt="Player"
+      style={{
+        position: 'absolute',
+        left: playerPosition.x,
+        top: playerPosition.y,
+        width: 50,
+        height: 50,
+      }}
+    />
+  );
 }
 
 export default Player;

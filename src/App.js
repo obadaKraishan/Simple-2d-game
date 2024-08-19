@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Level1 from './components/Level1';
 import Level2 from './components/Level2';
 import Level3 from './components/Level3';
+import './styles.css';
 
 function App() {
   const [level, setLevel] = useState(1);
