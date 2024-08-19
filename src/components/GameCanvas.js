@@ -11,7 +11,6 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, se
   const keysPressed = useRef({});
   const lastCollision = useRef(0);
 
-  // Define the repositionItem function outside the useEffect hook
   const repositionItem = () => {
     let newItemPosition;
     const canvasWidth = canvasRef.current.width;
@@ -33,8 +32,6 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, se
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
     const playerSpeed = 3;
 
     const playerImg = new Image();
@@ -66,8 +63,8 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, se
       if (keysPressed.current['ArrowLeft']) newX -= playerSpeed;
       if (keysPressed.current['ArrowRight']) newX += playerSpeed;
 
-      newX = Math.max(0, Math.min(newX, canvasWidth - 50));
-      newY = Math.max(0, Math.min(newY, canvasHeight - 50));
+      newX = Math.max(0, Math.min(newX, canvas.width - 50));
+      newY = Math.max(0, Math.min(newY, canvas.height - 50));
 
       setPlayerPosition({ x: newX, y: newY });
     };
@@ -136,46 +133,48 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, se
     const gameLoop = () => {
       if (gameOver) return;
 
-      context.clearRect(0, 0, canvasWidth, canvasHeight);
+      context.clearRect(0, 0, canvas.width, canvas.height);
 
       updatePlayerPosition();
+      updatePolicePosition();
+      checkCollision();
+
+      // Draw player
       context.drawImage(playerImg, playerPosition.x, playerPosition.y, 50, 50);
 
-      updatePolicePosition();
+      // Draw police
       context.drawImage(policeImg, policePosition.x, policePosition.y, 50, 50);
 
+      // Draw item
       context.drawImage(itemImg, itemPosition.current.x, itemPosition.current.y, 30, 30);
 
+      // Draw obstacles
       obstacles.forEach((obstacle) => {
         context.drawImage(obstacleImg, obstacle.x, obstacle.y, 50, 50);
       });
 
-      checkCollision();
-
       requestAnimationFrame(gameLoop);
     };
 
-    playerImg.onload = () => {
-      window.addEventListener('keydown', handleKeyDown);
-      window.addEventListener('keyup', handleKeyUp);
-      gameLoop();
-    };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    gameLoop();
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [playerPosition, policePosition, score, gameOver, gameWon, obstacles, policeSpeed, itemTarget]);
+  }, [playerPosition, policePosition, gameOver, gameWon, obstacles, policeSpeed, itemTarget]);
 
   useEffect(() => {
     if (gameOver && !gameWon) {
       if (lives > 1) {
         setLives(lives - 1);
-        setGameOver(false); // Reset gameOver state
-        setScore(0); // Reset score for the current level
-        setPlayerPosition({ x: 50, y: 50 }); // Reset player position
-        setPolicePosition({ x: 700, y: 500 }); // Reset police position
-        repositionItem(); // Reposition the item
+        setGameOver(false);
+        setScore(0);
+        setPlayerPosition({ x: 50, y: 50 });
+        setPolicePosition({ x: 700, y: 500 });
+        repositionItem();
       } else {
         setLives(3);
         setGameOver(true);

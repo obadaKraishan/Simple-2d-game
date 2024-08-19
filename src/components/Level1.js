@@ -9,7 +9,14 @@ function Level1({ onNextLevel, lives, setLives }) {
   const policeSpeed = 1; // Slow speed for Level 1
 
   return (
-    <GameCanvas obstacles={obstacles} policeSpeed={policeSpeed} itemTarget={5} onNextLevel={onNextLevel} lives={lives} setLives={setLives} />
+    <GameCanvas 
+      obstacles={obstacles} 
+      policeSpeed={policeSpeed} 
+      itemTarget={5} 
+      onNextLevel={onNextLevel} 
+      lives={lives} 
+      setLives={setLives} 
+    />
   );
 }
 
