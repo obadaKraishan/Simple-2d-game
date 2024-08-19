@@ -12,6 +12,7 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, se
   const lastCollision = useRef(0);
 
   const repositionItem = () => {
+    if (gameWon) return;  // Prevent repositioning if the game is won
     let newItemPosition;
     const canvasWidth = canvasRef.current.width;
     const canvasHeight = canvasRef.current.height;
@@ -82,7 +83,7 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, se
     };
 
     const checkCollision = () => {
-      if (gameOver) return;
+      if (gameOver || gameWon) return;  // Prevent collision checks if game is over or won
 
       const now = Date.now();
       if (now - lastCollision.current < 300) return;
@@ -130,7 +131,17 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, se
       }
     };
 
-    const gameLoop = () => {
+    let lastTime = 0;
+
+    const gameLoop = (time) => {
+      const deltaTime = time - lastTime;
+      if (deltaTime < 1000 / 20) { // 20 FPS cap for further reduction
+        requestAnimationFrame(gameLoop);
+        return;
+      }
+
+      lastTime = time;
+
       if (gameOver) return;
 
       context.clearRect(0, 0, canvas.width, canvas.height);
@@ -158,7 +169,7 @@ function GameCanvas({ obstacles, policeSpeed, itemTarget, onNextLevel, lives, se
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
-    gameLoop();
+    requestAnimationFrame(gameLoop);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
